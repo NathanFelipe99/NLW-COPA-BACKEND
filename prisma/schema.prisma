@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Bolao {
+  id        String   @id @default(uuid())
+  anTitulo  String
+  caBolao   String   @unique
+  dtIncSys  DateTime @default(now())
+  boInativo Int      @default(0)
+  criadorId String?
+
+  usuarioCriador Usuario?       @relation(fields: [criadorId], references: [id])
+  participantes  Participante[]
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  nmUsuario String
+  anEmail   String   @unique
+  blAvatar  String?
+  dtIncSys  DateTime @default(now())
+  boInativo Int      @default(0)
+
+  participandoEm Participante[]
+
+  boloesCriados Bolao[]
+}
+
+model Jogo {
+  id                 String   @id @default(uuid())
+  dtJogo             DateTime
+  caSelecaoMandante  String
+  caSelecaoVisitante String
+  dtIncSys           DateTime @default(now())
+
+  palpites Palpite[]
+}
+
+model Participante {
+  id        String @id @default(uuid())
+  usuarioId String
+  bolaoId   String
+
+  palpites Palpite[]
+  usuario  Usuario   @relation(fields: [usuarioId], references: [id])
+  bolao    Bolao     @relation(fields: [bolaoId], references: [id])
+
+  @@unique([usuarioId, bolaoId])
+}
+
+model Palpite {
+  id                String   @id @default(uuid())
+  nrPontosMandante  Int
+  nrPontosVisitante Int
+  dtIncSys          DateTime @default(now())
+  jogoId            String
+  participanteId    String
+
+  jogo         Jogo         @relation(fields: [jogoId], references: [id])
+  participante Participante @relation(fields: [participanteId], references: [id])
+}
